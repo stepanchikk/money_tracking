@@ -53,7 +53,7 @@ exports.login = async(req, res) => {
                 _id: user._id,
                 username: user.username,
                 email: user.email,
-                token: generateToken(user_id)
+                token: generateToken(user._id)
             });
         } else {
             res.status(401).json({ message: 'Невірний email або пароль' });
