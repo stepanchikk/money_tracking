@@ -13,7 +13,7 @@ exports.getGoals = async (req, res) => {
 // Створити ціль
 exports.createGoal = async (req, res) => {
     try {
-        const { name, targetAmount, deadline } = req.body;
+        const { name, targetAmount, currentAmount, deadline } = req.body;
 
         if (!name || !targetAmount) {
             return res.status(400).json({ message: 'Назва та сума цілі є обов\'язковими' });
@@ -23,6 +23,7 @@ exports.createGoal = async (req, res) => {
             user: req.user._id,
             name,
             targetAmount,
+            currentAmount: currentAmount || 0,
             deadline
         });
 
@@ -32,13 +33,13 @@ exports.createGoal = async (req, res) => {
     }
 };
 
-// Оновити ціль (наприклад, змінити суму або назву)
+// Оновити ціль
 exports.updateGoal = async (req, res) => {
     try {
-        const { name, targetAmount, deadline } = req.body;
+        const { name, targetAmount, currentAmount, deadline } = req.body;
         const goal = await Goal.findOneAndUpdate(
             { _id: req.params.id, user: req.user._id },
-            { name, targetAmount, deadline },
+            { name, targetAmount, currentAmount, deadline },
             { new: true }
         );
 
@@ -51,6 +52,30 @@ exports.updateGoal = async (req, res) => {
         res.status(500).json({ message: 'Помилка при оновленні цілі', error: error.message });
     }
 };
+
+// Додати кошти до цілі
+exports.addFunds = async (req, res) => {
+    try {
+        const { amount } = req.body;
+        if (!amount || isNaN(amount)) {
+            return res.status(400).json({ message: 'Вкажіть коректну суму' });
+        }
+
+        const goal = await Goal.findOne({ _id: req.params.id, user: req.user._id });
+        if (!goal) {
+            return res.status(404).json({ message: 'Ціль не знайдено' });
+        }
+
+        const newAmount = parseFloat(goal.currentAmount.toString()) + parseFloat(amount);
+        goal.currentAmount = newAmount;
+        await goal.save();
+
+        res.status(200).json(goal);
+    } catch (error) {
+        res.status(500).json({ message: 'Помилка при додаванні коштів', error: error.message });
+    }
+};
+
 
 // Видалити ціль
 exports.deleteGoal = async (req, res) => {

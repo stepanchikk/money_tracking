@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PlusCircle, Wallet, Trash2, CreditCard } from 'lucide-react';
+import { Plus, Trash2, CreditCard } from 'lucide-react';
 
 const Accounts = ({ accounts, fetchData }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -33,7 +33,7 @@ const Accounts = ({ accounts, fetchData }) => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Ви впевнені? Це видалить всі транзакції пов\'язані з цим рахунком!')) return;
+    if (!window.confirm('Ви впевнені? Це видалить рахунок.')) return;
     try {
       await fetch(`/api/accounts/${id}`, {
         method: 'DELETE',
@@ -47,65 +47,82 @@ const Accounts = ({ accounts, fetchData }) => {
 
   return (
     <div className="animate-fade-in">
-      <div className="flex-between mb-6">
+      <div className="flex-between mb-12">
         <div>
-          <h1 style={{ fontSize: '1.875rem', fontWeight: 700 }}>Мої Рахунки</h1>
-          <p style={{ color: 'var(--text-muted)' }}>Керуйте своїми банківськими рахунками та готівкою.</p>
+          <h1>Рахунки</h1>
+          <p>Керуйте своїми банківськими рахунками та готівкою.</p>
         </div>
         <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
-          <PlusCircle size={20} /> Додати рахунок
+          <Plus size={18} /> Додати рахунок
         </button>
       </div>
 
-      <div className="stats-grid">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '2rem' }}>
         {accounts.map((acc) => (
-          <div key={acc._id} className="card">
-            <div className="flex-between mb-4">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div style={{ padding: '10px', background: '#e0f2fe', borderRadius: '12px', color: 'var(--info)' }}>
-                  <CreditCard size={24} />
-                </div>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>{acc.name}</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{acc.currency}</div>
-                </div>
+          <div key={acc._id} className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div className="flex-between">
+              <div style={{ padding: '10px', background: 'var(--bg-main)', borderRadius: '10px', color: 'var(--primary)' }}>
+                <CreditCard size={24} />
               </div>
-              <button onClick={() => handleDelete(acc._id)} style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer' }}>
+              <button 
+                onClick={() => handleDelete(acc._id)} 
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
+              >
                 <Trash2 size={18} />
               </button>
             </div>
             
-            <div className="mt-4">
-              <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Доступний баланс</div>
+            <div>
+              <div className="stat-label" style={{ marginBottom: '0.25rem' }}>{acc.name}</div>
               <div className="stat-value">{parseFloat(acc.balance?.$numberDecimal || acc.balance).toLocaleString()} ₴</div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, borderTop: '1px solid var(--border-light)', paddingTop: '1rem' }}>
+              <span>{acc.currency}</span>
+              <span>**** {acc._id.slice(-4)}</span>
             </div>
           </div>
         ))}
-      </div>
-
-      {accounts.length === 0 && (
-        <div className="card" style={{ textAlign: 'center', padding: '4rem' }}>
-          <Wallet size={48} style={{ color: 'var(--border)', marginBottom: '1rem' }} />
-          <h3>Немає активних рахунків</h3>
-          <p style={{ color: 'var(--text-muted)' }}>Додайте свій перший рахунок, щоб почати трекінг.</p>
+        
+        <div 
+          onClick={() => setIsModalOpen(true)}
+          style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            border: '2px dashed var(--border)',
+            borderRadius: 'var(--radius)',
+            padding: '2rem',
+            cursor: 'pointer',
+            height: '215px',
+            color: 'var(--text-muted)',
+            transition: 'all 0.2s',
+            background: 'transparent'
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.color = 'var(--primary)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-muted)'; }}
+        >
+          <Plus size={32} strokeWidth={1.5} style={{ marginBottom: '0.75rem' }} />
+          <span style={{ fontWeight: 700, fontSize: '0.9375rem' }}>Новий рахунок</span>
         </div>
-      )}
+      </div>
 
       {isModalOpen && (
         <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
           <div className="modal-content animate-fade-in" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h2 style={{ marginBottom: 0 }}>Новий рахунок</h2>
+              <h2>Новий рахунок</h2>
               <button className="btn" onClick={() => setIsModalOpen(false)}>✕</button>
             </div>
             <div className="modal-body">
               <form onSubmit={handleSubmit}>
                 <div className="form-group">
                   <label>Назва рахунку</label>
-                  <input type="text" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Наприклад: Монобанк, Готівка" />
+                  <input type="text" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Наприклад: Monobank" />
                 </div>
                 <div className="form-group">
-                  <label>Початковий баланс (₴)</label>
+                  <label>Початковий баланс</label>
                   <input type="number" step="0.01" required value={formData.balance} onChange={e => setFormData({...formData, balance: e.target.value})} placeholder="0.00" />
                 </div>
                 <div className="form-group">
@@ -116,7 +133,7 @@ const Accounts = ({ accounts, fetchData }) => {
                     <option value="EUR">EUR (€)</option>
                   </select>
                 </div>
-                <button type="submit" className="btn btn-primary mt-4 w-full">Зберегти рахунок</button>
+                <button type="submit" className="btn btn-primary w-full mt-4">Створити рахунок</button>
               </form>
             </div>
           </div>

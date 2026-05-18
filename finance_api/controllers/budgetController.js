@@ -90,3 +90,24 @@ exports.deleteBudget = async (req, res) => {
         res.status(500).json({ message: 'Помилка при видаленні бюджету', error: error.message });
     }
 };
+
+// Оновити бюджет
+exports.updateBudget = async (req, res) => {
+    try {
+        const { category, amountLimit, startDate, endDate } = req.body;
+        const budget = await Budget.findOneAndUpdate(
+            { _id: req.params.id, user: req.user._id },
+            { category, amountLimit, startDate, endDate },
+            { new: true }
+        ).populate('category', 'name');
+
+        if (!budget) {
+            return res.status(404).json({ message: 'Бюджет не знайдено' });
+        }
+
+        res.status(200).json(budget);
+    } catch (error) {
+        res.status(500).json({ message: 'Помилка при оновленні бюджету', error: error.message });
+    }
+};
+

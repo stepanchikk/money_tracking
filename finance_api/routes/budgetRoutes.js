@@ -1,5 +1,5 @@
 const express = require('express');
-const { getBudgets, createBudget, checkBudgetStatus, deleteBudget } = require('../controllers/budgetController');
+const { getBudgets, createBudget, checkBudgetStatus, deleteBudget, updateBudget } = require('../controllers/budgetController');
 const { protect } = require('../middlewares/authMiddleware');
 
 const router = express.Router();
@@ -76,6 +76,37 @@ router.route('/')
  *     responses:
  *       200:
  *         description: Статус бюджету (витрачено/залишилось)
+ *   put:
+ *     summary: Оновити бюджет
+ *     tags: [Budgets]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               category:
+ *                 type: string
+ *               amountLimit:
+ *                 type: number
+ *               startDate:
+ *                 type: string
+ *                 format: date
+ *               endDate:
+ *                 type: string
+ *                 format: date
+ *     responses:
+ *       200:
+ *         description: Бюджет оновлено
  *   delete:
  *     summary: Видалити бюджет
  *     tags: [Budgets]
@@ -93,6 +124,7 @@ router.route('/')
  */
 router.route('/:id')
     .get(checkBudgetStatus)
+    .put(updateBudget)
     .delete(deleteBudget);
 
 module.exports = router;

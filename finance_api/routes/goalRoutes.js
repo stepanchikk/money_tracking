@@ -1,5 +1,5 @@
 const express = require('express');
-const { getGoals, createGoal, updateGoal, deleteGoal } = require('../controllers/goalController');
+const { getGoals, createGoal, updateGoal, deleteGoal, addFunds } = require('../controllers/goalController');
 const { protect } = require('../middlewares/authMiddleware');
 
 const router = express.Router();
@@ -102,5 +102,36 @@ router.route('/')
 router.route('/:id')
     .put(updateGoal)
     .delete(deleteGoal);
+
+/**
+ * @swagger
+ * /api/goals/{id}/add-funds:
+ *   post:
+ *     summary: Додати кошти до цілі
+ *     tags: [Goals]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - amount
+ *             properties:
+ *               amount:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Кошти додано
+ */
+router.post('/:id/add-funds', addFunds);
 
 module.exports = router;

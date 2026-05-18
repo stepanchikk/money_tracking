@@ -139,3 +139,76 @@ exports.deleteTransaction = async (req, res) => {
         session.endSession();
     }
 };
+
+// Оновити транзакцію
+exports.updateTransaction = async (req, res) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+        const transaction = await Transaction.findOne({ _id: req.params.id, user: req.user._id }).session(session);
+        if (!transaction) {
+            await session.abortTransaction();
+            return res.status(404).json({ message: 'Транзакцію не знайдено' });
+        }
+
+        const { account, toAccount, category, type, amount, date, description, tags } = req.body;
+
+        // Повертаємо старий баланс
+        const oldSourceAccount = await Account.findById(transaction.account).session(session);
+        const oldAmount = parseFloat(transaction.amount.toString());
+
+        if (transaction.type === 'income') {
+            if (oldSourceAccount) oldSourceAccount.balance = parseFloat(oldSourceAccount.balance.toString()) - oldAmount;
+        } else if (transaction.type === 'expense') {
+            if (oldSourceAccount) oldSourceAccount.balance = parseFloat(oldSourceAccount.balance.toString()) + oldAmount;
+        } else if (transaction.type === 'transfer') {
+            const oldTargetAccount = await Account.findById(transaction.toAccount).session(session);
+            if (oldSourceAccount) oldSourceAccount.balance = parseFloat(oldSourceAccount.balance.toString()) + oldAmount;
+            if (oldTargetAccount) {
+                oldTargetAccount.balance = parseFloat(oldTargetAccount.balance.toString()) - oldAmount;
+                await oldTargetAccount.save({ session });
+            }
+        }
+        if (oldSourceAccount) await oldSourceAccount.save({ session });
+
+        // Оновлюємо транзакцію
+        transaction.account = account || transaction.account;
+        transaction.type = type || transaction.type;
+        transaction.amount = amount || transaction.amount;
+        transaction.toAccount = type === 'transfer' ? toAccount : null;
+        transaction.category = type !== 'transfer' ? category : null;
+        transaction.date = date || transaction.date;
+        transaction.description = description !== undefined ? description : transaction.description;
+        transaction.tags = tags || transaction.tags;
+
+        await transaction.save({ session });
+
+        // Застосовуємо новий баланс
+        const newSourceAccount = await Account.findById(transaction.account).session(session);
+        const newAmount = parseFloat(transaction.amount.toString());
+
+        if (transaction.type === 'income') {
+            newSourceAccount.balance = parseFloat(newSourceAccount.balance.toString()) + newAmount;
+        } else if (transaction.type === 'expense') {
+            newSourceAccount.balance = parseFloat(newSourceAccount.balance.toString()) - newAmount;
+        } else if (transaction.type === 'transfer') {
+            const newTargetAccount = await Account.findById(transaction.toAccount).session(session);
+            newSourceAccount.balance = parseFloat(newSourceAccount.balance.toString()) - newAmount;
+            if (newTargetAccount) {
+                newTargetAccount.balance = parseFloat(newTargetAccount.balance.toString()) + newAmount;
+                await newTargetAccount.save({ session });
+            }
+        }
+        await newSourceAccount.save({ session });
+
+        await session.commitTransaction();
+        res.status(200).json(transaction);
+    } catch (error) {
+        await session.abortTransaction();
+        res.status(500).json({ message: 'Помилка при оновленні транзакції', error: error.message });
+    } finally {
+        session.endSession();
+    }
+};
+

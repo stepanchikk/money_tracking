@@ -6,9 +6,9 @@ import {
   PieChart, 
   Target, 
   LogOut,
-  ChevronRight,
   BarChart3,
-  Tag
+  Tag,
+  CircleDollarSign
 } from 'lucide-react';
 
 const Sidebar = ({ activeTab, setActiveTab, setToken }) => {
@@ -30,15 +30,8 @@ const Sidebar = ({ activeTab, setActiveTab, setToken }) => {
   return (
     <aside className="sidebar">
       <div className="sidebar-logo">
-        <div style={{ 
-          background: 'var(--primary)', 
-          padding: '8px', 
-          borderRadius: '10px',
-          color: 'white'
-        }}>
-          <Wallet size={24} />
-        </div>
-        <span>Finance Pro</span>
+        <CircleDollarSign size={28} strokeWidth={2.5} />
+        <span>FinancePro</span>
       </div>
 
       <nav className="sidebar-nav">
@@ -48,15 +41,14 @@ const Sidebar = ({ activeTab, setActiveTab, setToken }) => {
             className={`nav-item ${activeTab === item.id ? 'active' : ''}`}
             onClick={() => setActiveTab(item.id)}
           >
-            <item.icon size={20} />
+            <item.icon size={20} strokeWidth={activeTab === item.id ? 2.5 : 2} />
             <span>{item.label}</span>
-            {activeTab === item.id && <ChevronRight size={14} style={{ marginLeft: 'auto' }} />}
           </div>
         ))}
       </nav>
 
       <div className="sidebar-footer">
-        <div className="nav-item text-danger" onClick={handleLogout} style={{ color: 'var(--danger)' }}>
+        <div className="nav-item" onClick={handleLogout}>
           <LogOut size={20} />
           <span>Вийти</span>
         </div>

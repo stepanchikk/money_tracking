@@ -2,7 +2,8 @@ const express = require('express');
 const { 
     createTransaction, 
     getTransactions, 
-    deleteTransaction 
+    deleteTransaction,
+    updateTransaction
 } = require('../controllers/transactionController');
 const { protect } = require('../middlewares/authMiddleware');
 
@@ -106,6 +107,20 @@ router.route('/')
 /**
  * @swagger
  * /api/transactions/{id}:
+ *   put:
+ *     summary: Оновити транзакцію
+ *     tags: [Transactions]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Транзакцію оновлено
  *   delete:
  *     summary: Видалити транзакцію
  *     tags: [Transactions]
@@ -122,6 +137,8 @@ router.route('/')
  *         description: Транзакцію видалено
  */
 router.route('/:id')
+    .put(updateTransaction)
     .delete(deleteTransaction);
+
 
 module.exports = router;
